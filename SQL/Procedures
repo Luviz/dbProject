@@ -1,7 +1,6 @@
 
 
 
-
 INSERT INTO account VALUES
 (2000),
 (1500),
@@ -154,19 +153,19 @@ AS
 BEGIN TRANSACTION [transTakeOut]
 BEGIN TRY
 IF (SELECT account.balance FROM account
-	WHERE account.id = @Aid) >= @amount
-	BEGIN
-	SET @result = @amount
-	UPDATE account
-		SET balance = balance - @amount
-		WHERE id = @Aid
-	INSERT INTO acclog VALUES
-		(@Aid,@amount,SYSDATETIME())
-	END
-	ELSE
-	BEGIN 
-	SET @result = 0
-	END
+WHERE account.id = @Aid) >= @amount
+BEGIN
+SET @result = @amount
+UPDATE account
+SET balance = balance - @amount
+WHERE id = @Aid
+INSERT INTO acclog VALUES
+(@Aid,0-@amount,SYSDATETIME())
+END
+ELSE
+BEGIN
+SET @result = 0
+END
 COMMIT TRANSACTION [transTakeOut]
 END TRY
 BEGIN CATCH
