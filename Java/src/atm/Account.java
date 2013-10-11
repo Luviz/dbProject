@@ -26,9 +26,21 @@ public class Account {
 	public String getBalance() {
 		return balance;
 	}
-
-	public void setBalance(String balance) {
-		this.balance = balance;
+	/**
+	 * pulls the balance value from account
+	 * @throws SQLException 
+	 */
+	public void setBalance() throws SQLException {
+		//CREATE PROCEDURE returnBalance @Aid int, @return int OUTPUT
+		CallableStatement cs = null;
+		cs = iConn.prepareCall("returnBalance ? , ? OUTPUT");
+		cs.setInt(1, Integer.parseInt(account));
+		cs.registerOutParameter(2, Types.INTEGER);
+		cs.execute();
+		int bala = cs.getInt(2);
+		this.balance = Integer.toString(bala);
+		System.out.println("got bala: "+ bala);
+		cs.close();
 	}
 
 	public String getAccount() {
@@ -42,6 +54,12 @@ public class Account {
 	public String getPin() {
 		return pin;
 	}
+	
+	
+	public boolean isLogin() {
+		return login;
+	}
+
 	/**
 	 * connect to server
 	 * @throws ClassNotFoundException -driver fail
@@ -57,39 +75,68 @@ public class Account {
 	}
 	
 	/**
+	 * Change database
 	 * USE dv1454_ht13_5
 	 * @throws SQLException
 	 */
 	
 	private void setdb() throws SQLException{
 		Statement stmt = iConn.createStatement();
-		
 		stmt.execute("USE dv1454_ht13_5 ");
-		//ResultSetMetaData meta = res.getMetaData();
-		//System.out.println("Number of columns: " + meta);
-		//res.close();
 		stmt.close();
-		System.out.println("blb");
+		//System.out.println("blb");
 	}
 	/**
 	 * 
 	 * @throws SQLException
 	 */
 	private void login() throws SQLException{
-		//DECLARE @@r int = 0 EXEC confirmLoginAccess 1, 3123, 3
-		System.out.println("LOGIN...");
+		//DECLARE @@r int = 0 EXEC confirmLoginAccess aHolder, PIN, account, ret OUTPUT //pin 1:3123
+		System.out.println("LOGIN...");	//debug
 		CallableStatement cs = null;
 		cs = iConn.prepareCall("EXEC confirmLoginAccess ?, ?, ?, ? OUTPUT");
-		cs.setInt(1, 1);
-		cs.setInt(2, 3223);
-		cs.setInt(3, 1);
+		cs.setInt(1, Integer.parseInt(aHolder));
+		cs.setInt(2, Integer.parseInt(pin));
+		cs.setInt(3, Integer.parseInt(account));
 		cs.registerOutParameter(4, Types.INTEGER);
 		cs.execute();
-		System.out.println(cs.getInt(4));
-		//res.close();
+		//System.out.println(cs.getInt(4));	//debug
+		int ret = cs.getInt(4);
+		if (ret == 1 ){	//login successful
+			this.login = true;
+			setBalance();
+		}else{			//login fail
+			this.login = false;
+			System.out.println("login Failed");
+		}
 		cs.close();
-		//stmt.close();	
+		System.out.println("login done!");	//debug
 	}
-	
-	
+	/**
+	 * 
+	 * @param sAmount
+	 * @throws SQLException 
+	 */
+	public boolean withDraw(String sAmount) throws SQLException{
+		int amount = Integer.parseInt(sAmount);
+		if(amount == 0){
+			return true;
+		}else{
+			CallableStatement cs = iConn.prepareCall("EXEC takeOutMoney ? , ? , ? OUTPUT");
+			cs.setInt(1, Integer.parseInt(account));
+			cs.setInt(2, amount);
+			cs.registerOutParameter(3, Types.INTEGER);
+			cs.execute();
+			int ret = cs.getInt(3);
+			if(ret == 0){
+				return false;
+			}else if (ret>0){
+				return true;
+			}else{
+				System.out.println("ret < 0");
+				return false;
+			}
+		}
+	}
+		
 }

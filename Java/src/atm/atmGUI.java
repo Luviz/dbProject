@@ -3,10 +3,12 @@ package atm;
 import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
@@ -17,35 +19,64 @@ public class atmGUI extends JFrame {
 	private class Action implements ActionListener{
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			System.out.println(e.getActionCommand());
-			System.out.println(lPassword.getPassword());
-			//System.out.println(l);
-			System.out.println(lUsername.getText().contains("@"));
+			//System.out.println(lUsername.getText().contains("@"));
 			if (e.getActionCommand().equals("Login")){
-				if(lUsername.getText().contains("@")){
-					System.out.println("@ ok");
+				if(lUsername.getText().contains("@")||!(lUsername.getText().equals("accountHolderID@accountID"))){
+					//System.out.println("@ ok");	//debug
 					if(!(lPassword.getPassword().length == 0)){
-						System.out.println(lPassword.getPassword());
+						//System.out.println(lPassword.getPassword());	//debug
 						String uId , aId;
 						uId = lUsername.getText().substring(0,lUsername.getText().indexOf('@'));
-						System.out.println(uId);
+						//System.out.println(uId);						//debug
 						aId = lUsername.getText().substring(lUsername.getText().indexOf('@')+1);
-						System.out.println(aId);
+						//System.out.println(aId);						//debug
+						try {
+							acc = new Account(aId, uId, new String(lPassword.getPassword()));
+							//System.out.println(acc.getBalance());		//debug
+						} catch (ClassNotFoundException | SQLException e1) {
+							
+							e1.printStackTrace();
+							JOptionPane.showMessageDialog(getParent(), "Error System failer att login or connection or db-failer"+
+									e1.getMessage(),"ERROR!",JOptionPane.ERROR_MESSAGE);
+						}
+						if(acc.isLogin()){
+							//System.out.println("acc.getBalance() == "+acc.getBalance());	//debug
+							System.out.println("logedin!");
+							terminateLogin();
+							launchWithDraw();
+						}else {
+							JOptionPane.showMessageDialog(getParent(), "Incorrect LOGIN information Pleas try agen!"
+									,"FALSE LOGIN!",JOptionPane.WARNING_MESSAGE);
+						}
+					
 					}
 				}
 			}
 			if (e.getActionCommand().equals("With Draw")){
-				//login.removeAll();
-				remove(withDraw);
-				//removeAll();
-				login();
-				add(login);
-				revalidate();
-				repaint();
-				System.out.println("-");
+				//TODO add whitdarw function!
+				boolean isSuccessful = false; 
+				//Successful 
+				try {
+					isSuccessful = acc.withDraw(wAmount.getText());
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+					JOptionPane.showMessageDialog(getParent(), "Error att account withdraw!\n"+e1.getMessage(),"ERROR!",JOptionPane.ERROR_MESSAGE);
+				}
+				if (isSuccessful){
+					terminateWithdraw();
+					launchLogin();
+				}else{
+					JOptionPane.showMessageDialog(getParent(),"You have NOT enough minerals", "WARING!",JOptionPane.WARNING_MESSAGE);
+					
+				}
 			}
 		}
+
 	}
+	
+	//account
+	Account acc; 
 	
 	//login
 	private JPanel login = new JPanel(null);
@@ -61,6 +92,7 @@ public class atmGUI extends JFrame {
 	//-----------
 	
 	atmGUI(){
+		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		config();
 		init();
@@ -99,7 +131,7 @@ public class atmGUI extends JFrame {
 		lLogin.addActionListener(new Action());
 		lLogin.setLocation(367, 300);
 		lLogin.setSize(lLogin.getPreferredSize());
-		System.out.println(lLogin.getPreferredSize());
+		//System.out.println(lLogin.getPreferredSize());	//debug
 		login.add(lUsername);
 		login.add(lPassword);
 		login.add(u);
@@ -108,7 +140,9 @@ public class atmGUI extends JFrame {
 	}
 	
 	private void withDraw(){
-		wBalance.setText("10221.12");
+		//System.out.println("withdraw");		//debug
+		//System.out.println(acc.getBalance());	//debug
+		wBalance.setText(acc.getBalance());
 		wBalance.setHorizontalAlignment(JLabel.CENTER);
 		wBalance.setSize(150,26);
 		wBalance.setLocation((getSize().width/2)-(wBalance.getSize().width/2), 230);
@@ -128,9 +162,30 @@ public class atmGUI extends JFrame {
 		
 	}
 	
-	private void render(int choose){
+	private void launchLogin(){
+		login();
+		add(login);
+		revalidate();
+		repaint();
+	}
+	private void terminateLogin(){
+		remove(login);
+	}
+	
+	private void launchWithDraw(){
 		withDraw();
 		add(withDraw);
+		revalidate();
+		repaint();
+	}
+	private void terminateWithdraw(){
+		remove (withDraw);
+	}
+	
+	private void render(int choose){
+		launchLogin();
+		/*withDraw();
+		add(withDraw);*/
 	}
 
 }
