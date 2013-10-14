@@ -118,4 +118,24 @@ SET @return = (SELECT account.balance FROM account
 					
 					
 					
+CREATE PROCEDURE depositMoney @Aid int, @amount int, @result int OUTPUT
+AS
+BEGIN TRANSACTION [transDeposit]
+BEGIN TRY
+UPDATE account
+SET balance = balance + @amount
+WHERE id = @Aid
+INSERT INTO acclog VALUES
+(@Aid,@amount,SYSDATETIME())
+SET @result = 0
+COMMIT TRANSACTION [transDeposit]
+END TRY
+BEGIN CATCH
+SET @result = 1
+ROLLBACK TRANSACTION [transDeposit]
+END CATCH
+GO
+GO	
+					
+					
 					
