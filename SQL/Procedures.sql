@@ -70,8 +70,7 @@ CREATE PROCEDURE confirmLoginAccess @AHid int, @AHpin int, @Aid int, @result int
 AS
 BEGIN TRANSACTION [transConfirmLogin]
 BEGIN TRY
-	IF EXISTS
-(SELECT aha.aID, aha.ahID,accountholder.id,accountholder.pin FROM aha INNER JOIN accountholder
+	IF EXISTS(SELECT aha.aID, aha.ahID,accountholder.id,accountholder.pin FROM aha INNER JOIN accountholder
 	ON aha.ahID = accountholder.id AND accountholder.id = @AHid AND accountholder.pin = @AHpin AND aha.aid = @Aid) 
 	SET @result = 1
 	ELSE SET @result = 0
@@ -83,6 +82,19 @@ END CATCH
 GO
 GO
 
+DROP PROCEDURE login
+GO
+CREATE PROCEDURE login @AHid int, @AHpin int, @ret int OUTPUT
+AS 
+	IF EXISTS(SELECT * FROM accountholder WHERE id = @AHid AND pin = @AHpin)
+	BEGIN 
+		SET @ret = 1
+	END
+	ELSE
+	BEGIN
+		SET @ret = 0
+	END
+GO
 
 CREATE PROCEDURE takeOutMoney @Aid int, @amount int, @result int OUTPUT
 AS
