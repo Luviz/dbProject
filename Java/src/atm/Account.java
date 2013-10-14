@@ -2,8 +2,6 @@ package atm;
 
 import java.sql.*;
 
-import sun.nio.cs.MS1250;
-
 public class Account {
 	
 	private String account;
