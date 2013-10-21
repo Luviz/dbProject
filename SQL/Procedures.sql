@@ -1,3 +1,6 @@
+
+
+
 USE dv1454_ht13_5
 GO
 CREATE PROCEDURE calculateInterests
@@ -6,13 +9,13 @@ BEGIN TRANSACTION [transInterest]
 BEGIN TRY
 
 INSERT INTO intrest
-	SELECT account.id,tInterest.aInterest,SYSDATETIME() AS currentDate
-	FROM (SELECT account.id AS aID,account.balance * 1.01 AS aInterest FROM account) AS tInterest,account
-	WHERE account.id = tInterest.aID
+SELECT account.id,tInterest.aInterest,SYSDATETIME() AS currentDate
+FROM (SELECT account.id AS aID,account.balance * 1.01 AS aInterest FROM account) AS tInterest,account
+WHERE account.id = tInterest.aID
 COMMIT TRANSACTION [transInterest]
 END TRY
 BEGIN CATCH
-	ROLLBACK TRANSACTION [transInterest]
+ROLLBACK TRANSACTION [transInterest]
 END CATCH
 GO
 GO
@@ -27,7 +30,7 @@ INSERT INTO accountholder VALUES
 COMMIT TRANSACTION [transAddAH]
 END TRY
 BEGIN CATCH
-	ROLLBACK TRANSACTION [transAddAH]
+ROLLBACK TRANSACTION [transAddAH]
 END CATCH
 GO
 GO
@@ -48,12 +51,12 @@ GO
 GO
 
 
-CREATE PROCEDURE openAccount @ahID int
+CREATE PROCEDURE openAccount @ahID int, @balance int
 AS
 BEGIN TRANSACTION [transOpenAccount]
 BEGIN TRY
 INSERT INTO account VALUES
-(0)
+(@balance)
 DECLARE @accountid int
 SET @accountid = (SELECT MAX(account.id) AS newestID FROM account)
 EXEC linkAccount @lAHid = @ahID, @lAid = @accountid
@@ -65,15 +68,15 @@ END CATCH
 GO
 GO
 
-
 CREATE PROCEDURE confirmLoginAccess @AHid int, @AHpin int, @Aid int, @result int OUTPUT
 AS
 BEGIN TRANSACTION [transConfirmLogin]
 BEGIN TRY
-	IF EXISTS(SELECT aha.aID, aha.ahID,accountholder.id,accountholder.pin FROM aha INNER JOIN accountholder
-	ON aha.ahID = accountholder.id AND accountholder.id = @AHid AND accountholder.pin = @AHpin AND aha.aid = @Aid) 
-	SET @result = 1
-	ELSE SET @result = 0
+IF EXISTS
+(SELECT aha.aID, aha.ahID,accountholder.id,accountholder.pin FROM aha INNER JOIN accountholder
+ON aha.ahID = accountholder.id AND accountholder.id = @AHid AND accountholder.pin = @AHpin AND aha.aid = @Aid)
+SET @result = 1
+ELSE SET @result = 0
 COMMIT TRANSACTION [transConfirmLogin]
 END TRY
 BEGIN CATCH
@@ -82,19 +85,6 @@ END CATCH
 GO
 GO
 
-DROP PROCEDURE login
-GO
-CREATE PROCEDURE login @AHid int, @AHpin int, @ret int OUTPUT
-AS 
-	IF EXISTS(SELECT * FROM accountholder WHERE id = @AHid AND pin = @AHpin)
-	BEGIN 
-		SET @ret = 1
-	END
-	ELSE
-	BEGIN
-		SET @ret = 0
-	END
-GO
 
 CREATE PROCEDURE takeOutMoney @Aid int, @amount int, @result int OUTPUT
 AS
@@ -126,10 +116,10 @@ GO
 CREATE PROCEDURE returnBalance @Aid int, @return int OUTPUT
 AS
 SET @return = (SELECT account.balance FROM account
-					WHERE account.id = @Aid)
-					
-					
-					
+WHERE account.id = @Aid)
+
+
+
 CREATE PROCEDURE depositMoney @Aid int, @amount int, @result int OUTPUT
 AS
 BEGIN TRANSACTION [transDeposit]
@@ -147,7 +137,101 @@ SET @result = 1
 ROLLBACK TRANSACTION [transDeposit]
 END CATCH
 GO
+GO
+
+
+CREATE PROCEDURE getAHName @AHid int, @result varchar(80) OUTPUT
+AS
+DECLARE @temp varchar(80) = (SELECT name FROM accountholder WHERE id = @AHid)
+SET @result = @temp
+GO
+
+
+CREATE PROCEDURE getAHCount @result int OUTPUT
+AS
+DECLARE @temp int = (SELECT COUNT(ID) FROM accountholder) 
+SET @result = @temp
+GO
+
+
+CREATE PROCEDURE getAHBirthdate @AHid int, @result int OUTPUT
+AS
+DECLARE @temp int = (SELECT birthdate FROM accountholder WHERE id = @AHid)
+SET @result = @temp
+GO
+
+
+CREATE PROCEDURE getAHTelephone @AHid int, @result int OUTPUT
+AS
+DECLARE @temp int = (SELECT telephone FROM accountholder WHERE id = @AHid)
+SET @result = @temp
+GO
+
+
+CREATE PROCEDURE getACount @result int OUTPUT
+AS
+DECLARE @temp int = (SELECT COUNT(ID) FROM account) 
+SET @result = @temp
+GO
+
+
+CREATE PROCEDURE getAHPin @AHid int, @result int OUTPUT
+AS
+DECLARE @temp int = (SELECT pin FROM accountholder WHERE id = @AHid)
+SET @result = @temp
+GO
+
+
+CREATE PROCEDURE getAHEmail @AHid int, @result varchar(225) OUTPUT
+AS
+DECLARE @temp varchar(225) = (SELECT email FROM accountholder WHERE id = @AHid)
+SET @result = @temp
+GO
+
+
+CREATE PROCEDURE getABalance @Aid int, @result int OUTPUT
+AS
+DECLARE @temp int = (SELECT balance FROM account WHERE id = @Aid)
+SET @result = @temp
+GO
+
+
+CREATE PROCEDURE getAHACount @result int OUTPUT
+AS
+DECLARE @temp int = (SELECT COUNT(ahID) FROM aha) 
+SET @result = @temp
+GO
+
+
+CREATE PROCEDURE getAHAAHid @index int, @result int OUTPUT
+AS
+DECLARE @temp int = (SELECT ahID from (SELECT ROW_NUMBER() OVER (ORDER BY AHid) AS Row,ahID,aID FROM aha)
+	AS tAHA WHERE Row = @index)
+SET @result = @temp
+GO
+
+
+CREATE PROCEDURE getAHAAid @index int, @result int OUTPUT
+AS
+DECLARE @temp int = (SELECT aID from (SELECT ROW_NUMBER() OVER (ORDER BY AHid) AS Row,ahID,aID FROM aha)
+	AS tAHA WHERE Row = @index)
+SET @result = @temp
 GO	
-					
-					
-					
+
+
+CREATE PROCEDURE getAid @index int, @result int OUTPUT
+AS
+DECLARE @temp int = (SELECT ID from (SELECT ROW_NUMBER() OVER (ORDER BY id) AS Row,ID FROM account)
+	AS tAccount WHERE Row = @index)
+SET @result = @temp
+GO
+
+
+CREATE PROCEDURE getAHid @index int, @result int OUTPUT
+AS
+DECLARE @temp int = (SELECT ID from (SELECT ROW_NUMBER() OVER (ORDER BY id) AS Row,ID FROM accountholder)
+	AS tAccountholder WHERE Row = @index)
+SET @result = @temp
+GO
+
+
