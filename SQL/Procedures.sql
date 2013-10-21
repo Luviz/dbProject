@@ -1,6 +1,5 @@
 
 
-
 USE dv1454_ht13_5
 GO
 CREATE PROCEDURE calculateInterests
@@ -117,7 +116,7 @@ CREATE PROCEDURE returnBalance @Aid int, @return int OUTPUT
 AS
 SET @return = (SELECT account.balance FROM account
 WHERE account.id = @Aid)
-
+GO
 
 
 CREATE PROCEDURE depositMoney @Aid int, @amount int, @result int OUTPUT
