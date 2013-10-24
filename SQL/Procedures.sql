@@ -1,5 +1,4 @@
 
-
 USE dv1454_ht13_5
 GO
 CREATE PROCEDURE calculateInterests
@@ -232,5 +231,21 @@ DECLARE @temp int = (SELECT ID from (SELECT ROW_NUMBER() OVER (ORDER BY id) AS R
 	AS tAccountholder WHERE Row = @index)
 SET @result = @temp
 GO
+
+
+
+DROP PROCEDURE cI
+GO
+CREATE PROCEDURE cI @aID INT, @return int OUTPUT
+AS
+	DECLARE @bala INT , @test int
+	EXEC returnBalance @aid , @bala output;
+	SET @bala = @bala * 0.01;
+	EXEC depositMoney @aID ,@bala ,@test output;
+	EXEC returnBalance @aID, @bala OUTPUT
+	SET @return = @bala
+GO
+
+
 
 
