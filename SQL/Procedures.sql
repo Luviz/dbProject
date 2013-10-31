@@ -1,14 +1,16 @@
-
 USE dv1454_ht13_5
+GO
+
+
+DROP PROCEDURE calculateInterests
 GO
 CREATE PROCEDURE calculateInterests
 AS
 BEGIN TRANSACTION [transInterest]
 BEGIN TRY
-
 INSERT INTO intrest
 SELECT account.id,tInterest.aInterest,SYSDATETIME() AS currentDate
-FROM (SELECT account.id AS aID,account.balance * 1.01 AS aInterest FROM account) AS tInterest,account
+FROM (SELECT account.id AS aID,account.balance * 1.01/365 AS aInterest FROM account) AS tInterest,account
 WHERE account.id = tInterest.aID
 COMMIT TRANSACTION [transInterest]
 END TRY
@@ -19,6 +21,8 @@ GO
 GO
 
 
+DROP PROCEDURE addAccountHolder
+GO
 CREATE PROCEDURE addAccountHolder @name varchar(80), @birthdate int, @telephone varchar(20),@email varchar(225),@pin int
 AS
 BEGIN TRANSACTION [transAddAH]
@@ -34,6 +38,8 @@ GO
 GO
 
 
+DROP PROCEDURE linkAccount
+GO
 CREATE PROCEDURE linkAccount @lAHid int, @lAid int
 AS
 BEGIN TRANSACTION [transLinkAccount]
@@ -49,6 +55,8 @@ GO
 GO
 
 
+DROP PROCEDURE openAccount
+GO
 CREATE PROCEDURE openAccount @ahID int, @balance int
 AS
 BEGIN TRANSACTION [transOpenAccount]
@@ -66,6 +74,9 @@ END CATCH
 GO
 GO
 
+
+DROP PROCEDURE confirmLoginAccess
+GO
 CREATE PROCEDURE confirmLoginAccess @AHid int, @AHpin int, @Aid int, @result int OUTPUT
 AS
 BEGIN TRANSACTION [transConfirmLogin]
@@ -84,6 +95,8 @@ GO
 GO
 
 
+DROP PROCEDURE takeOutMoney
+GO
 CREATE PROCEDURE takeOutMoney @Aid int, @amount int, @result int OUTPUT
 AS
 BEGIN TRANSACTION [transTakeOut]
@@ -102,6 +115,8 @@ ELSE
 BEGIN
 SET @result = 0
 END
+DECLARE @interest float = @amount*0.02
+EXEC depositMoney 1,@interest,0
 COMMIT TRANSACTION [transTakeOut]
 END TRY
 BEGIN CATCH
@@ -110,7 +125,8 @@ END CATCH
 GO
 GO
 
-
+DROP PROCEDURE returnBalance
+GO
 CREATE PROCEDURE returnBalance @Aid int, @return int OUTPUT
 AS
 SET @return = (SELECT account.balance FROM account
@@ -118,6 +134,8 @@ WHERE account.id = @Aid)
 GO
 
 
+DROP PROCEDURE depositMoney
+GO
 CREATE PROCEDURE depositMoney @Aid int, @amount int, @result int OUTPUT
 AS
 BEGIN TRANSACTION [transDeposit]
@@ -138,6 +156,8 @@ GO
 GO
 
 
+DROP PROCEDURE getAHName
+GO
 CREATE PROCEDURE getAHName @AHid int, @result varchar(80) OUTPUT
 AS
 DECLARE @temp varchar(80) = (SELECT name FROM accountholder WHERE id = @AHid)
@@ -145,6 +165,8 @@ SET @result = @temp
 GO
 
 
+DROP PROCEDURE getAHCount
+GO
 CREATE PROCEDURE getAHCount @result int OUTPUT
 AS
 DECLARE @temp int = (SELECT COUNT(ID) FROM accountholder) 
@@ -152,6 +174,8 @@ SET @result = @temp
 GO
 
 
+DROP PROCEDURE getAHBirthdate
+GO
 CREATE PROCEDURE getAHBirthdate @AHid int, @result int OUTPUT
 AS
 DECLARE @temp int = (SELECT birthdate FROM accountholder WHERE id = @AHid)
@@ -159,6 +183,8 @@ SET @result = @temp
 GO
 
 
+DROP PROCEDURE getAHTelephone
+GO
 CREATE PROCEDURE getAHTelephone @AHid int, @result int OUTPUT
 AS
 DECLARE @temp int = (SELECT telephone FROM accountholder WHERE id = @AHid)
@@ -166,6 +192,8 @@ SET @result = @temp
 GO
 
 
+DROP PROCEDURE getACount
+GO
 CREATE PROCEDURE getACount @result int OUTPUT
 AS
 DECLARE @temp int = (SELECT COUNT(ID) FROM account) 
@@ -173,6 +201,8 @@ SET @result = @temp
 GO
 
 
+DROP PROCEDURE  getAHPin
+GO
 CREATE PROCEDURE getAHPin @AHid int, @result int OUTPUT
 AS
 DECLARE @temp int = (SELECT pin FROM accountholder WHERE id = @AHid)
@@ -180,6 +210,8 @@ SET @result = @temp
 GO
 
 
+DROP PROCEDURE getAHEmail
+GO
 CREATE PROCEDURE getAHEmail @AHid int, @result varchar(225) OUTPUT
 AS
 DECLARE @temp varchar(225) = (SELECT email FROM accountholder WHERE id = @AHid)
@@ -187,6 +219,8 @@ SET @result = @temp
 GO
 
 
+DROP PROCEDURE getABalance
+GO
 CREATE PROCEDURE getABalance @Aid int, @result int OUTPUT
 AS
 DECLARE @temp int = (SELECT balance FROM account WHERE id = @Aid)
@@ -194,6 +228,8 @@ SET @result = @temp
 GO
 
 
+DROP PROCEDURE getAHACount
+GO
 CREATE PROCEDURE getAHACount @result int OUTPUT
 AS
 DECLARE @temp int = (SELECT COUNT(ahID) FROM aha) 
@@ -201,6 +237,8 @@ SET @result = @temp
 GO
 
 
+DROP PROCEDURE getAHAAHid
+GO
 CREATE PROCEDURE getAHAAHid @index int, @result int OUTPUT
 AS
 DECLARE @temp int = (SELECT ahID from (SELECT ROW_NUMBER() OVER (ORDER BY AHid) AS Row,ahID,aID FROM aha)
@@ -209,6 +247,8 @@ SET @result = @temp
 GO
 
 
+DROP PROCEDURE getAHAid
+GO
 CREATE PROCEDURE getAHAAid @index int, @result int OUTPUT
 AS
 DECLARE @temp int = (SELECT aID from (SELECT ROW_NUMBER() OVER (ORDER BY AHid) AS Row,ahID,aID FROM aha)
@@ -217,6 +257,8 @@ SET @result = @temp
 GO	
 
 
+DROP PROCEDURE getAid
+GO
 CREATE PROCEDURE getAid @index int, @result int OUTPUT
 AS
 DECLARE @temp int = (SELECT ID from (SELECT ROW_NUMBER() OVER (ORDER BY id) AS Row,ID FROM account)
@@ -225,6 +267,8 @@ SET @result = @temp
 GO
 
 
+DROP PROCEDURE getAHid
+GO
 CREATE PROCEDURE getAHid @index int, @result int OUTPUT
 AS
 DECLARE @temp int = (SELECT ID from (SELECT ROW_NUMBER() OVER (ORDER BY id) AS Row,ID FROM accountholder)
@@ -246,6 +290,33 @@ AS
 	SET @return = @bala
 GO
 
+
+DROP PROCEDURE transferMoney
+GO
+CREATE PROCEDURE transferMoney @AidFrom int, @AidTo int, @amount float
+AS
+BEGIN
+	IF (SELECT account.balance FROM account
+		WHERE account.id = @AidFrom) >= @amount
+	BEGIN
+		UPDATE ACCOUNT
+			SET balance = balance-@amount
+			WHERE ID = @AidFrom
+		UPDATE ACCOUNT
+			SET balance = balance+@amount
+			WHERE ID = @AidTo
+		UPDATE ACCOUNT
+			SET balance = balance+(@amount*0.03)
+			WHERE ID = 1	
+		INSERT INTO acclog VALUES
+			(@AidFrom,0-@amount,SYSDATETIME())
+		INSERT INTO acclog VALUES
+			(@AidTo,@amount,SYSDATETIME())
+		INSERT INTO acclog VALUES
+			(1,0+(@amount*0.03),SYSDATETIME())
+	END
+END
+GO
 
 
 
