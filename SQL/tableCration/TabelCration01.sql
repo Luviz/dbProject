@@ -24,7 +24,7 @@ DROP TABLE account
 GO
 CREATE TABLE account(
 	id INT IDENTITY(1,1) PRIMARY KEY,
-	balance INT NOT NULL
+	balance float NOT NULL
 )
 
 DROP TABLE aha
@@ -51,7 +51,7 @@ CREATE TABLE acclog(
 	id INT NOT NULL IDENTITY(1,1), 
 	PRIMARY KEY(id),
 	aID INT NOT NULL FOREIGN KEY REFERENCES account(id),
-	ammount INT NOT NULL,
+	ammount float NOT NULL,
 	timestamp DATETIME
 )
 
@@ -61,7 +61,7 @@ CREATE TABLE intrest(
 	id INT NOT NULL IDENTITY(1,1), 
 	PRIMARY KEY(id),
 	aID INT NOT NULL FOREIGN KEY REFERENCES account(id),
-	calculatedIntrest INT NOT NULL,
+	calculatedIntrest float NOT NULL,
 	date DATETIME,
 	
 )
