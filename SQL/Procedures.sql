@@ -57,7 +57,7 @@ GO
 
 DROP PROCEDURE openAccount
 GO
-CREATE PROCEDURE openAccount @ahID int, @balance int
+CREATE PROCEDURE openAccount @ahID int, @balance float
 AS
 BEGIN TRANSACTION [transOpenAccount]
 BEGIN TRY
@@ -97,7 +97,7 @@ GO
 
 DROP PROCEDURE takeOutMoney
 GO
-CREATE PROCEDURE takeOutMoney @Aid int, @amount int, @result int OUTPUT
+CREATE PROCEDURE takeOutMoney @Aid int, @amount float, @result float OUTPUT
 AS
 BEGIN TRANSACTION [transTakeOut]
 BEGIN TRY
@@ -127,7 +127,7 @@ GO
 
 DROP PROCEDURE returnBalance
 GO
-CREATE PROCEDURE returnBalance @Aid int, @return int OUTPUT
+CREATE PROCEDURE returnBalance @Aid int, @return float OUTPUT
 AS
 SET @return = (SELECT account.balance FROM account
 WHERE account.id = @Aid)
@@ -136,7 +136,7 @@ GO
 
 DROP PROCEDURE depositMoney
 GO
-CREATE PROCEDURE depositMoney @Aid int, @amount int, @result int OUTPUT
+CREATE PROCEDURE depositMoney @Aid int, @amount float, @result int OUTPUT
 AS
 BEGIN TRANSACTION [transDeposit]
 BEGIN TRY
@@ -221,9 +221,9 @@ GO
 
 DROP PROCEDURE getABalance
 GO
-CREATE PROCEDURE getABalance @Aid int, @result int OUTPUT
+CREATE PROCEDURE getABalance @Aid int, @result float OUTPUT
 AS
-DECLARE @temp int = (SELECT balance FROM account WHERE id = @Aid)
+DECLARE @temp float = (SELECT balance FROM account WHERE id = @Aid)
 SET @result = @temp
 GO
 
@@ -280,9 +280,9 @@ GO
 
 DROP PROCEDURE cI
 GO
-CREATE PROCEDURE cI @aID INT, @return int OUTPUT
+CREATE PROCEDURE cI @aID INT, @return float OUTPUT
 AS
-	DECLARE @bala INT , @test int
+	DECLARE @bala float , @test int
 	EXEC returnBalance @aid , @bala output;
 	SET @bala = @bala * 0.01;
 	EXEC depositMoney @aID ,@bala ,@test output;
